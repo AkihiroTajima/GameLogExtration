@@ -7,6 +7,10 @@ out/
 
 5vList.txt
 
+map.txt
+
+*.txt
+
 GameLogExtration.iml
 
 map.csv

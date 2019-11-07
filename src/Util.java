@@ -129,8 +129,8 @@ public class Util {
                     System.err.println("unexpected count number " + out);
                     System.err.println("from " + f.getAbsolutePath());
                 }
-                String p = progress(i,s);
-                if (Double.parseDouble(p) % 10 == 0) System.out.println(p + " %");
+//                printProg(i,s,100);
+                if (i % 1000 == 0)System.out.println(i + " / " + s);
                 i++;
             }
 
@@ -388,6 +388,6 @@ public class Util {
     }
     void printProg(int now , int lim, int per) {
         String prog = progress(now,lim);
-        if (Double.parseDouble(prog) % per == 0) System.out.println(prog + " %");
+        if (Double.parseDouble(prog) % per < 1) System.out.println(prog + " %");
     }
 }

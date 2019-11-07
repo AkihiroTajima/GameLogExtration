@@ -27,6 +27,24 @@ public class Log {
         this.readLists();
     }
 
+    public List<List<Talk>> talkMap(){
+        List<List<Talk>> res = new ArrayList<>();
+
+        res.add(new ArrayList<>());
+        int nowday = 1;
+        for (Talk t : talkList) {
+            if (t.day.equals(Integer.toString(nowday))){
+                res.get(res.size()-1).add(t);
+            } else {
+                nowday++;
+                res.add(new ArrayList<>());
+                res.get(res.size()-1).add(t);
+            }
+        }
+
+        return res;
+    }
+
     void readLists() {
         if (this.log.size() == 0) {
             System.err.println("log is empty");

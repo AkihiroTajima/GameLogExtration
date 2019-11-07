@@ -4,12 +4,12 @@ import java.util.List;
 public class Talk {
 
     final String defaultValue = "def";
-    private String day = defaultValue;
+    String day = defaultValue;
     private String actType = defaultValue;
 
-    private String talkID = defaultValue;
+    String talkID = defaultValue;
     private String turnID = "0";
-    private String playerID = defaultValue;
+    String playerID = defaultValue;
     String content = defaultValue;
 
     private List<String> elementList;
