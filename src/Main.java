@@ -64,8 +64,6 @@ public class Main {
         return res;
     }
 
-
-
     Main(String rootInput) {
         this.root = rootInput;
 //        u.writePathList(root);
@@ -79,28 +77,12 @@ public class Main {
         Main m = new Main(root);
         Log l = new Log(m.u.path2Line(m.pathTo5vList).get(0));
 
-        int daynum = 1;
-        int agent = 1;
-        List<List<Talk>> map = l.talkMap();
-        System.out.println(map.size());
-
-        for (List<Talk> day : map) {
-            for (Talk t : day) {
+//        for (List<Talk> day : map) {
+//            for (Talk t : day) {
 //                System.out.println(daynum + " : " + t.toString());
-                if (t.playerID.equals(Integer.toString(agent))) {
-                    System.out.println(t);
-                    int talkID = Integer.parseInt(t.talkID);
-                    for (int i = talkID-1; i >= 0 ; i--) {
-                        if (talkID - i > 4) break;
-                        Talk now = day.get(i);
-                        if (now.playerID.equals(Integer.toString(agent))) break;
-                        System.out.println("\t" + day.get(i));
-                    }
-                }
-            }
-            daynum++;
-            System.out.println("======================================================================");
-        }
+//            }
+//            daynum++;
+//        }
 
     }
 }
