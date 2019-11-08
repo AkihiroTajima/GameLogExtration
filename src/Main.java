@@ -76,6 +76,7 @@ public class Main {
 
         Main m = new Main(root);
         Log l = new Log(m.u.path2Line(m.pathTo5vList).get(0));
+        l.situation(3);
 
 //        for (List<Talk> day : map) {
 //            for (Talk t : day) {

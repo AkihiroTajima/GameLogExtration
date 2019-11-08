@@ -28,7 +28,7 @@ public class Log {
     }
 
     void situation(int agent) {
-
+        List<String> res = new ArrayList<>();
 
         int windowSize = 4; // [1,4(numplayer-1)]
         List<List<Talk>> map = this.talkMap();
