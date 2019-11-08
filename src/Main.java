@@ -75,15 +75,31 @@ public class Main {
                 String root = "/Users/nicolas/pg/aiwolf/log";
 
         Main m = new Main(root);
-        Log l = new Log(m.u.path2Line(m.pathTo5vList).get(0));
-        l.situation(3);
 
-//        for (List<Talk> day : map) {
-//            for (Talk t : day) {
-//                System.out.println(daynum + " : " + t.toString());
-//            }
-//            daynum++;
-//        }
+        Map<String , Integer> map = new HashMap<>();
+        for (String path : m.u.path2Line(m.pathTo5vList)) {
+            Log l = new Log(path);
+            for (int i = 1; i<5; i++) {
+                List<String> s = l.situation(i);
+                for (String str : s) {
+                    //System.out.println(i + " : " + str.split(",").length + " : " + str);
+                    if (!map.containsKey(str)) {
+                        map.put(str, 1);
+                    } else {
+                        map.put(str, map.get(str) + 1);
+                    }
+                }
+                //System.out.println("--------------------------------------------------");
+            }
+        }
+
+
+        System.out.println(map.size());
+
+        map.entrySet().stream()
+                .sorted(java.util.Map.Entry.comparingByValue())
+                .forEach(System.out::println);
+
 
     }
 }

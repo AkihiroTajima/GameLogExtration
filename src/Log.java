@@ -27,30 +27,34 @@ public class Log {
         this.readLists();
     }
 
-    void situation(int agent) {
+    List<String> situation(int agent) {
         List<String> res = new ArrayList<>();
 
         int windowSize = 4; // [1,4(numplayer-1)]
         List<List<Talk>> map = this.talkMap();
-        int daynum = 1;
-//        System.out.println(map.size());
 
         for (List<Talk> day : map) {
             for (Talk t : day) {
                 if (t.playerID.equals(Integer.toString(agent))) {
-                    System.out.println(t);
+                    //System.out.println(t);
+                    String content = "";
                     int talkID = Integer.parseInt(t.talkID);
                     for (int i = talkID-1; i >= 0 ; i--) {
                         if (talkID - i > windowSize) break;
                         Talk now = day.get(i);
                         if (now.playerID.equals(Integer.toString(agent))) break;
-                        System.out.println("\t" + day.get(i));
+                        //System.out.println("\t" + day.get(i));
+                        if (!content.isEmpty())content += ":";
+//                        System.out.println("content : "+day.get(i).content);
+                        content += day.get(i).content;
                     }
+                    if (!content.isEmpty()) res.add(content);
                 }
             }
-            daynum++;
-            System.out.println("======================================================================");
+            //System.out.println("======================================================================");
         }
+
+        return res;
     }
 
     public List<List<Talk>> talkMap(){

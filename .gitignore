@@ -19,3 +19,7 @@ map.csv.bak
 
 rep.py
 .DS_Store
+
+*.csv
+
+*.bak
