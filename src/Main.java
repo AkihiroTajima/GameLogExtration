@@ -14,8 +14,8 @@ public class Main {
     private  String root ;
     Util u = new Util();
 
-    void writeTalkMap() {
-        List<String> p = u.path2Line(pathTo5vList);
+    void printTalkMap(String logPath) {
+        List<String> p = u.path2Line(logPath);
         Map<String, Integer> map = new HashMap<>();
         for (String path : p) {
             Log l = new Log(path);
@@ -32,6 +32,33 @@ public class Main {
         map.entrySet().stream()
                 .sorted(java.util.Map.Entry.comparingByValue())
                 .forEach(System.out::println);
+    }
+
+    void printSituasionMap(String logPath) {
+        Map<String , Integer> map = new HashMap<>();
+        for (String path : u.path2Line(logPath)) {
+            Log l = new Log(path);
+            for (int i = 1; i<5; i++) {
+                List<String> s = l.situation(i);
+                for (String str : s) {
+                    //System.out.println(i + " : " + str.split(",").length + " : " + str);
+                    if (!map.containsKey(str)) {
+                        map.put(str, 1);
+                    } else {
+                        map.put(str, map.get(str) + 1);
+                    }
+                }
+                //System.out.println("--------------------------------------------------");
+            }
+        }
+
+
+        // System.out.println(map.size());
+
+        map.entrySet().stream()
+                .sorted(java.util.Map.Entry.comparingByValue())
+                .forEach(System.out::println);
+
     }
 
     List<String> writeAllTopics(){
@@ -75,31 +102,19 @@ public class Main {
                 String root = "/Users/nicolas/pg/aiwolf/log";
 
         Main m = new Main(root);
+        Util u = new Util();
 
-        Map<String , Integer> map = new HashMap<>();
-        for (String path : m.u.path2Line(m.pathTo5vList)) {
-            Log l = new Log(path);
-            for (int i = 1; i<5; i++) {
-                List<String> s = l.situation(i);
-                for (String str : s) {
-                    //System.out.println(i + " : " + str.split(",").length + " : " + str);
-                    if (!map.containsKey(str)) {
-                        map.put(str, 1);
-                    } else {
-                        map.put(str, map.get(str) + 1);
-                    }
-                }
-                //System.out.println("--------------------------------------------------");
-            }
-        }
+        // get the file path to game logs
+        // which is devided by the number of player
+        u.writePathList(root);
 
+        // get the all "Talk" in logs
+        // and count them
+        m.printTalkMap(m.pathTo5vList);
 
-        System.out.println(map.size());
-
-        map.entrySet().stream()
-                .sorted(java.util.Map.Entry.comparingByValue())
-                .forEach(System.out::println);
-
+        // get the all "Situasion" in logs
+        // and count them
+        m.printSituasionMap(m.pathTo5vList);
 
     }
 }
