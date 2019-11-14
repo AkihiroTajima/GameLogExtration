@@ -7,7 +7,7 @@ public class Execute {
     private String actType = defaultValue;
 
     private String targetID = defaultValue;
-    private String targetRole = defaultValue;
+    String targetRole = defaultValue;
 
     private List<String> elementList;
 

@@ -3,13 +3,13 @@ import java.util.List;
 
 public class Status {
     final String defaultValue = "def";
-    private String day = defaultValue;
+    String day = defaultValue;
     private String actType = defaultValue;
 
-    private String playerID = defaultValue;
-    private String role = defaultValue;
-    private String isSurvive = defaultValue;
-    private String name = defaultValue;
+    String playerID = defaultValue;
+    String role = defaultValue;
+    String isSurvive = defaultValue;
+    String name = defaultValue;
 
     private List<String> elementList;
 

@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Result {
     final String defaultValue = "def";
-    private String day = defaultValue;
+    String day = defaultValue;
     private String actType = defaultValue;
 
     private String numVillagers = defaultValue;

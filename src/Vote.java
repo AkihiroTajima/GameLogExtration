@@ -3,11 +3,11 @@ import java.util.List;
 
 public class Vote {
     final String defaultValue = "def";
-    private String day = defaultValue;
+    String day = defaultValue;
     private String actType = defaultValue;
 
     private String from = defaultValue;
-    private String to = defaultValue;
+    String to = defaultValue;
 
 
     private List<String> elementList;

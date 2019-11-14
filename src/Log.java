@@ -1,13 +1,13 @@
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Log {
     String path = "";
     File f;
     Util u = new Util();
     List<String[]> log;
+
+    Map<String, String> playerIDMap = new HashMap<>();
 
     List<Talk> talkList = new ArrayList<>();
     List<Vote> voteList = new ArrayList<>();
@@ -25,6 +25,10 @@ public class Log {
         this.f = new File(path);
         this.log = u.path2SplitedLog(path);
         this.readLists();
+        for (Status s : this.statusList) {
+            if (!s.day.equals("0")) break;
+            this.playerIDMap.put(s.playerID, s.name);
+        }
     }
 
     List<String> situation(int agent) {

@@ -8,7 +8,7 @@ public class Talk {
     private String actType = defaultValue;
 
     String talkID = defaultValue;
-    private String turnID = "0";
+    String turnID = "0";
     String playerID = defaultValue;
     String content = defaultValue;
 

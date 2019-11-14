@@ -12,9 +12,13 @@ public class Main {
     private final String pathTo15vList = "15vList.txt";
     private final String pathTo5vList = "5vList.txt";
     private  String root ;
+    Map<String, Integer> talkMap;
+    Map<String, Integer> topicMap;
+    Map<String, Integer> playerMap;
+    Map<String, Integer> objectiveMap;
     Util u = new Util();
 
-    void printTalkMap(String logPath) {
+    Map<String, Integer> printTalkMap(String logPath) {
         List<String> p = u.path2Line(logPath);
         Map<String, Integer> map = new HashMap<>();
         for (String path : p) {
@@ -32,6 +36,30 @@ public class Main {
         map.entrySet().stream()
                 .sorted(java.util.Map.Entry.comparingByValue())
                 .forEach(System.out::println);
+
+        return map;
+    }
+
+    Map<String, Integer> getTalkID() {
+        Map<String, Integer> res = new HashMap<>();
+
+        Map<String, Integer> map = printTalkMap(pathTo5vList);
+        for (String talk : map.keySet()) {
+            if (!res.containsKey(talk.toString())) {
+                res.put(talk.toString(), res.size());
+            }
+        }
+
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("talkID.csv"));
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            for (String talk : res.keySet()) {
+                pw.println(talk + "," + res.get(talk));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return res;
     }
 
     void printSituasionMap(String logPath) {
@@ -91,9 +119,200 @@ public class Main {
         return res;
     }
 
+    Map<String, Integer> getTopicID() {
+        Map<String, Integer> res = new HashMap<>();
+
+        List<String> topicList = writeAllTopics();
+
+        topicList.add("Else");
+
+        for (String topic : topicList) {
+            res.put(topic, res.size());
+        }
+
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("topicID.csv"));
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            Map<String, Integer> map = res;
+            for (String topic : map.keySet()) {
+                pw.println(topic + "," + map.get(topic));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+
+    Map<String, Integer> writePlayerID() {
+        Map<String, Integer> PlayerID = new HashMap<>();
+        for (String path : u.path2Line(pathTo5vList)) {
+            Log l = new Log(path);
+
+            for (Status s : l.statusList) {
+                if (!PlayerID.containsKey(s.name)) PlayerID.put(s.name, PlayerID.size());
+            }
+        }
+
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("playerID.csv"));
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            for (String key : PlayerID.keySet()) {
+                pw.println(key + "," + PlayerID.get(key));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return PlayerID;
+    }
+
+    void writeData() {
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("out2.csv"));
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            int i = 0;
+            pw.println("logID,day,turn,playerID,talkID,topicID,Objective");
+            for (String path : u.path2Line(pathTo5vList)) {
+                System.out.println(path);
+                for (String s : data(new Log(path), i)) {
+                    pw.println(s);
+                }
+                System.out.println("--------------------------------------------------------------------------------------");
+                i++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    List<String> data(Log l, int logID) {
+        List<String> res = new ArrayList<>();
+        String wolfID = "-1";
+        for (Status s : l.statusList) {
+            if (s.role.equals("WEREWOLF")) wolfID = s.playerID;
+        }
+        List<List<Talk>> talklist = new ArrayList<>();
+        List<List<Vote>> votelist = new ArrayList<>();
+        List<List<Status>> statuslist = new ArrayList<>();
+        talklist.add(new ArrayList<>());
+        votelist.add(new ArrayList<>());
+        statuslist.add(new ArrayList<>());
+        for (Talk t : l.talkList) {
+            if (Integer.parseInt(t.day) != talklist.size()) talklist.add(new ArrayList<>());
+            talklist.get(Integer.parseInt(t.day)-1).add(t);
+        }
+        for (Vote v : l.voteList) {
+            if (Integer.parseInt(v.day) != votelist.size()) votelist.add(new ArrayList<>());
+            votelist.get(Integer.parseInt(v.day)-1).add(v);
+        }
+        for (Status s : l.statusList) {
+            if (Integer.parseInt(s.day)+1 != statuslist.size()) statuslist.add(new ArrayList<>());
+            statuslist.get(Integer.parseInt(s.day)).add(s);
+        }
+
+//        int day = 0;
+//        for (List<Talk> tl : talklist) {
+//            day++;
+//            for (Talk t : tl) {
+//                System.out.println(day + " : " + t);
+//            }
+//        }
+//        day = 0;
+//        for (List<Vote> vl : votelist) {
+//            day++;
+//            for (Vote v : vl) {
+//                System.out.println(day + " : " + v);
+//            }
+//        }
+//        int day = 0;
+//        for (List<Status> sl : statuslist) {
+//            for (Status s : sl) {
+//                System.out.println(day + " : " + s);
+//            }
+//            day++;
+//        }
+        if (talklist.get(0).isEmpty() || votelist.get(0).isEmpty() || statuslist.get(0).isEmpty()) {
+            System.err.println("S1");
+            return res;
+        }
+        if (talklist.size() != votelist.size()) {
+            System.err.println("S2");
+            return res;
+        }
+        if (talklist.size() != l.executeList.size()) {
+            System.err.println("S2_1");
+            return res;
+        }
+
+        if (talklist.size() !=  statuslist.size()+2) {
+            System.err.println("S3");
+            //return;
+        }
+        if (wolfID.equals("-1")) {
+            System.err.println("wolfID is not correcr");
+            System.exit(1);
+        }
+//        System.out.println("Size of talkList = " + talklist.size());
+//        System.out.println("Size of voteList = " + votelist.size());
+//        System.out.println("Size of statusList = " + statuslist.size());
+
+        for (int day = 0; day<talklist.size(); day++){
+            double per;
+            double numVote = votelist.get(day).size();
+            double numVoteForWolf = 0;
+
+            for (Vote v : votelist.get(day)) {
+                if (v.to.equals(wolfID)) numVoteForWolf++;
+            }
+            per = numVoteForWolf/numVote;
+            String isWolfExecuted = "0";
+            if (l.executeList.get(day).targetRole.equals("WEREWOLF")) isWolfExecuted = "1";
+            String text = "";
+            for (Talk t : talklist.get(day)) {
+                System.out.println(day+1 + " : " + t.content + "," + per);
+                int topicID = topicMap.get("Else");
+                for (String str : this.topicMap.keySet()) if (t.content.startsWith(str)) topicID = this.topicMap.get(str);
+                text += t.content;
+                text += " ";
+
+                res.add(logID + "," +
+                        t.day + "," +
+                        t.turnID + "," +
+                        this.playerMap.get(l.playerIDMap.get(t.playerID)) + "," +
+                        this.talkMap.get(t.content) + "," +
+                        topicID + "," +
+                        this.objectiveMap.get(Double.toString(per)) );
+            }
+//            res.add(text + "," + isWolfExecuted);
+        }
+
+        return res;
+    }
+
     Main(String rootInput) {
         this.root = rootInput;
 //        u.writePathList(root);
+//        this.talkMap = this.getTalkID();
+//        this.topicMap = this.getTopicID();
+//        this.playerMap = this.writePlayerID();
+        this.talkMap = new HashMap<>();
+        this.topicMap = new HashMap<>();
+        this.playerMap = new HashMap<>();
+        this.objectiveMap = new HashMap<>();
+        for (String line : u.path2Line("talkID.csv")) {
+            String[] data = line.split(",");
+            this.talkMap.put(data[0], Integer.parseInt(data[1]));
+        }
+        for (String line : u.path2Line("topicID.csv")) {
+            String[] data = line.split(",");
+            this.topicMap.put(data[0], Integer.parseInt(data[1]));
+        }
+        for (String line : u.path2Line("playerID.csv")) {
+            String[] data = line.split(",");
+            this.playerMap.put(data[0], Integer.parseInt(data[1]));
+        }
+        for (String line : u.path2Line("objectiveMap.csv")) {
+            String[] data = line.split(",");
+            this.objectiveMap.put(data[0], Integer.parseInt(data[1]));
+        }
     }
 
     public static void main(String[] args) {
@@ -104,17 +323,14 @@ public class Main {
         Main m = new Main(root);
         Util u = new Util();
 
-        // get the file path to game logs
-        // which is devided by the number of player
-        u.writePathList(root);
+//        Log l = new Log(u.path2Line(m.pathTo5vList).get(0));
+//
+//        for (String[] line : l.log) {
+//            System.out.println(Arrays.asList(line));
+//        }
 
-        // get the all "Talk" in logs
-        // and count them
-        m.printTalkMap(m.pathTo5vList);
-
-        // get the all "Situasion" in logs
-        // and count them
-        m.printSituasionMap(m.pathTo5vList);
+//        m.getTalkID();
+        m.writeData();
 
     }
 }
