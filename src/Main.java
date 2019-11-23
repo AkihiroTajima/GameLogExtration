@@ -2,10 +2,12 @@
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+import static java.nio.file.StandardOpenOption.*;
 
 public class Main {
 
@@ -287,6 +289,46 @@ public class Main {
         return res;
     }
 
+    void getTalkData(Log l) {
+        List<String> playerList = new ArrayList<>();
+        l.statusList.stream().
+                filter(s -> s.day.equals("0")).
+                forEach(s -> playerList.add(s.playerID));
+
+        for (String playerID : playerList) {
+            String playerNAME = l.playerIDMap.get(playerID);
+            String path = "talkdata/";
+            path += playerNAME + ".csv";
+
+            try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(path), APPEND, CREATE);
+                 PrintWriter pw = new PrintWriter(bw, true)) {
+                List<String> line = new ArrayList<>();
+                List<String> codedLine = new ArrayList<>();
+                l.talkList.stream().
+                        filter(t -> t.playerID.equals(playerID)).
+                        collect(Collectors.toList()).
+                        forEach(t -> line.add(t.content));
+                line.forEach(s -> codedLine.add(talkMap.get(s).toString()));
+                pw.println(String.join(",", codedLine));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void writeTalkContent(Log l) {
+        String path = "talkContentPart.txt";
+        List<String> contentList = new ArrayList<>();
+        l.talkList.forEach(t -> contentList.add(t.content));
+        String line = String.join(" ", contentList);
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(path), APPEND, CREATE);
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            pw.println(line);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     Main(String rootInput) {
         this.root = rootInput;
 //        u.writePathList(root);
@@ -324,13 +366,13 @@ public class Main {
         Util u = new Util();
 
 //        Log l = new Log(u.path2Line(m.pathTo5vList).get(0));
-//
-//        for (String[] line : l.log) {
-//            System.out.println(Arrays.asList(line));
-//        }
 
+        List<String> pathList = u.path2Line(m.pathTo5vList);
+        pathList.forEach(path -> m.getTalkData(new Log(path)));
+
+        m.writeTalkContent(new Log(pathList.get(0)));
 //        m.getTalkID();
-        m.writeData();
+//        m.writeData();
 
     }
 }
