@@ -7,7 +7,10 @@ public class Log {
     Util u = new Util();
     List<String[]> log;
 
+    List<String> playerList = new ArrayList<>();
     Map<String, String> playerIDMap = new HashMap<>();
+    Map<String, String> roleMap = new HashMap<>();
+    String WolfID;
 
     List<Talk> talkList = new ArrayList<>();
     List<Vote> voteList = new ArrayList<>();
@@ -20,6 +23,9 @@ public class Log {
     List<Status> statusList = new ArrayList<>();
     List<Whisper> whisperList = new ArrayList<>();
 
+    boolean isCorrectPlayerNUmber = true;
+    boolean isThereAnyTalk = true;
+
     Log(String inputFilePath) {
         this.path = inputFilePath;
         this.f = new File(path);
@@ -28,6 +34,24 @@ public class Log {
         for (Status s : this.statusList) {
             if (!s.day.equals("0")) break;
             this.playerIDMap.put(s.playerID, s.name);
+        }
+        statusList.stream().
+                filter(s -> s.day.equals("0")).
+                forEach(s -> playerList.add(s.playerID));
+        if (!(playerList.size() == 5 || playerList.size() == 15)) {
+            isCorrectPlayerNUmber = false;
+        }
+
+        if (talkList.size() == 0) {
+            isThereAnyTalk = false;
+        }
+        for (String id : playerList) {
+            String role = "-1";
+            for (Status s : statusList) {
+                if (!s.day.equals("0")) break;
+                if (s.playerID.equals(id)) this.roleMap.put(id,s.role);
+                if (s.role.equals("WEREWOLF")) this.WolfID = s.playerID;
+            }
         }
     }
 
@@ -76,6 +100,29 @@ public class Log {
             }
         }
 
+        return res;
+    }
+
+    public List<Talk> dayTalk(String day) {
+        List<Talk> res = new ArrayList<>();
+        talkList.stream().
+                filter(t -> t.day.equals(day)).
+                forEach(res::add);
+        return res;
+    }
+    public List<Status> dayStatus(String day) {
+        List<Status> res = new ArrayList<>();
+        statusList.stream().
+                filter(t -> t.day.equals(day)).
+                forEach(res::add);
+        return res;
+    }
+
+    public List<Vote> dayVote(String day) {
+        List<Vote> res = new ArrayList<>();
+        voteList.stream().
+                filter(t -> t.day.equals(day)).
+                forEach(res::add);
         return res;
     }
 

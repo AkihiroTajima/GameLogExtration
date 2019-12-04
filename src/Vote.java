@@ -6,7 +6,7 @@ public class Vote {
     String day = defaultValue;
     private String actType = defaultValue;
 
-    private String from = defaultValue;
+    String from = defaultValue;
     String to = defaultValue;
 
 

@@ -1,5 +1,6 @@
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -18,6 +19,7 @@ public class Main {
     Map<String, Integer> topicMap;
     Map<String, Integer> playerMap;
     Map<String, Integer> objectiveMap;
+    Map<String, Integer> roleMap;
     Util u = new Util();
 
     Map<String, Integer> printTalkMap(String logPath) {
@@ -329,6 +331,118 @@ public class Main {
         }
     }
 
+    List<InputTalkData> getInputDatabyDaybyPlayer(Log l) {
+        List<InputTalkData> res = new ArrayList<>();
+
+        for (int day = 1; day <= 2; day++) {
+            for (String playerID : l.playerList) {
+                String PlayerVoteFor = "-1";
+                int numVoteforWolf = 0;
+                for (Vote v : l.dayVote(Integer.toString(day))) {
+                    if (v.from.equals(playerID)) PlayerVoteFor = v.to;
+                    if (v.to.equals(l.WolfID)) numVoteforWolf++;
+                }
+                if (PlayerVoteFor.equals("-1")) continue;
+
+                String playerNAME = l.playerIDMap.get(playerID);
+                List<String> PlayerTalkList = new ArrayList<>();
+                l.dayTalk(Integer.toString(day)).stream().
+                        filter(t -> t.playerID.equals(playerID)).
+                        collect(Collectors.toList()).
+                        forEach(t -> PlayerTalkList.add(t.content));
+
+                int tmp = Integer.parseInt(PlayerVoteFor);
+                tmp--;
+                PlayerVoteFor = Integer.toString(tmp);
+                res.add(new InputTalkData(PlayerTalkList, playerNAME, PlayerVoteFor, l.roleMap.get(playerID)));
+            }
+        }
+
+        return  res;
+    }
+    List<InputTalkData> getInputDatabyDay(Log l) {
+        List<InputTalkData> res = new ArrayList<>();
+
+        for (int day = 1; day <= 2; day++) {
+
+            double numVoteforWolf = 0;
+            int numArive = 0;
+            if (l.dayVote(Integer.toString(day)).isEmpty()) continue;
+            if (l.dayTalk(Integer.toString(day)).isEmpty()) continue;
+            for (Status s :  l.dayStatus(Integer.toString(day))){
+                if (s.isSurvive.equals("ALIVE")) numArive++;
+            }
+            for (Vote v : l.dayVote(Integer.toString(day))) {
+                if (v.to.equals(l.WolfID)) numVoteforWolf++;
+            }
+            numVoteforWolf /= (double) l.dayVote(Integer.toString(day)).size() /numArive;
+
+            res.add(new InputTalkData(l.dayTalk(Integer.toString(day)), numVoteforWolf));
+
+        }
+
+        return  res;
+    }
+
+    List<InputTalkData> getInputData(Log l) {
+        List<InputTalkData> res = new ArrayList<>();
+
+        for (String playerID : l.playerList) {
+            String playerNAME = l.playerIDMap.get(playerID);
+            List<String> PlayerTalkList = new ArrayList<>();
+            l.talkList.stream().
+                    filter(t -> t.playerID.equals(playerID)).
+                    collect(Collectors.toList()).
+                    forEach(t -> PlayerTalkList.add(t.content));
+            res.add(new InputTalkData(PlayerTalkList, playerNAME, Integer.toString(roleMap.get(l.roleMap.get(playerID)))));
+        }
+
+        return  res;
+    }
+
+    int writeInputData(List<InputTalkData> input, int len) {
+        String path = "detaByLength/" + Integer.toString(len) + ".txt";
+        int cnt = 0;
+        File file = new File(path);
+        boolean empty = !file.exists() || file.length() == 0;
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(path), CREATE, APPEND);
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            if (empty) pw.println("text,Objective");
+            for (InputTalkData in : input) {
+                List<String> line = new ArrayList<>();
+                for (String talk : in.talkList) {
+                    line.add(talk);
+                    if (line.size() == len) break;
+                }
+                if (line.size() != len) continue;
+
+                pw.println(String.join(" ", line) + "," + in.getVoteTarget());
+                cnt++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return cnt;
+    }
+    void writeInputData(List<InputTalkData> input) {
+        String path = "VoteForData.csv";
+        int cnt = 0;
+        File file = new File(path);
+        boolean empty = !file.exists() || file.length() == 0;
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(path), CREATE, APPEND);
+             PrintWriter pw = new PrintWriter(bw, true)) {
+            if (empty) pw.println("text,Objective");
+            for (InputTalkData in : input) {
+                pw.println(String.join(" ", in.talkList) + "," + in.getVoteTarget());
+                cnt++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     Main(String rootInput) {
         this.root = rootInput;
 //        u.writePathList(root);
@@ -339,6 +453,7 @@ public class Main {
         this.topicMap = new HashMap<>();
         this.playerMap = new HashMap<>();
         this.objectiveMap = new HashMap<>();
+        this.roleMap= new HashMap<>();
         for (String line : u.path2Line("talkID.csv")) {
             String[] data = line.split(",");
             this.talkMap.put(data[0], Integer.parseInt(data[1]));
@@ -351,9 +466,46 @@ public class Main {
             String[] data = line.split(",");
             this.playerMap.put(data[0], Integer.parseInt(data[1]));
         }
-        for (String line : u.path2Line("objectiveMap.csv")) {
+        for (String line : u.path2Line("roleMap.csv")) {
             String[] data = line.split(",");
-            this.objectiveMap.put(data[0], Integer.parseInt(data[1]));
+            this.roleMap.put(data[0], Integer.parseInt(data[1]));
+        }
+    }
+
+    void writeKenziContent() {
+        List<String> pathList = u.path2Line(pathTo5vList);
+        List<String> kenziPathList = new ArrayList<>();
+        for (String path : pathList) {
+            for (Status s : new Log(path).statusList) {
+                if (s.name.equals("kenzi")) kenziPathList.add(path);
+            }
+        }
+
+        Map<String,Integer> contentMap = new HashMap<>();
+
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get("kenziContent.txt"), CREATE);
+             PrintWriter pw = new PrintWriter(bw, true)) {
+//            contentMap.entrySet().stream()
+//                    .sorted(java.util.Map.Entry.comparingByValue())
+//                    .forEach(c -> pw.println(c.getKey() + "," + c.getValue()));
+            for (String path : kenziPathList) {
+                List<String> kentTalk = new ArrayList<>();
+                Log l = new Log(path);
+                String kenziId = "-1";
+                for (Status s : new Log(path).statusList) {
+                    if (s.name.equals("kenzi")) kenziId = s.playerID;
+                }
+                if (kenziId.equals("-1")) continue;
+                String finalKenziId = kenziId;
+                l.talkList.stream().filter(t -> t.playerID.equals(finalKenziId)).forEach(t -> kentTalk.add(t.content));
+                for (String c : kentTalk) {
+                    if (!contentMap.containsKey(c)) contentMap.put(c,1);
+                    else contentMap.put(c,contentMap.get(c)+1);
+                }
+                pw.println(String.join(", ", kentTalk));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -365,14 +517,26 @@ public class Main {
         Main m = new Main(root);
         Util u = new Util();
 
+//        u.writePathList("/home/kenzi/pg/setup/AIWolf11/log/");
+
 //        Log l = new Log(u.path2Line(m.pathTo5vList).get(0));
 
+//        l.log.forEach(line -> System.out.println(Arrays.asList(line)));
+
         List<String> pathList = u.path2Line(m.pathTo5vList);
-        pathList.forEach(path -> m.getTalkData(new Log(path)));
 
-        m.writeTalkContent(new Log(pathList.get(0)));
-//        m.getTalkID();
-//        m.writeData();
+//        pathList.forEach(p -> m.writeInputData(m.getInputDatabyDaybyPlayer(new Log(p))));
 
+        for (int i = 1; i < 500; i++) {
+            int sum = 0;
+            for (String path : pathList) {
+                sum += m.writeInputData(m.getInputDatabyDaybyPlayer(new Log(path)), i);
+            }
+            System.out.println(i);
+            if (sum == 0) {
+                System.err.println(i);
+                break;
+            }
+        }
     }
 }
